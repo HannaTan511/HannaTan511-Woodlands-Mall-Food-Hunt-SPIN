@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pac-Man Food Hunt — Woodlands</title>
+<style>
+:root{
+  --yellow:#ffe600; --blue:#1837d8; --dark:#050510; --pink:#ff3b81;
+  --cyan:#00e5ff; --white:#fff; --green:#48e66b; --orange:#ff8a00;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% 0%,#15156b 0,#07071c 42%,#020208 100%);
+color:var(--white);font-family:"Trebuchet MS",Arial,sans-serif;min-height:100vh}
+header{padding:28px 22px 20px;text-align:center;border-bottom:4px dotted var(--yellow);
+position:sticky;top:0;background:rgba(5,5,16,.96);z-index:10}
+.logo{font-size:clamp(28px,5vw,54px);font-weight:900;letter-spacing:2px;color:var(--yellow);
+text-shadow:4px 4px 0 #b08d00}
+.subtitle{color:#b9c2ff;margin:7px 0 18px}
+.searchbar{max-width:900px;margin:auto;display:flex;gap:10px;flex-wrap:wrap}
+input,select,button{font:inherit}
+#search{flex:1;min-width:230px;padding:13px 16px;border:3px solid var(--yellow);border-radius:12px;
+background:#09091e;color:white;outline:none}
+.filter{padding:12px 14px;border:2px solid var(--cyan);border-radius:12px;background:#09091e;color:white}
+.toggle{padding:12px 16px;border:2px solid var(--green);border-radius:12px;background:#0b3518;color:white;cursor:pointer}
+.toggle.active{background:var(--green);color:#041008;font-weight:900}
+.wrap{max-width:1400px;margin:auto;padding:24px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.stat{background:#0b0b28;border:2px solid #3737a0;border-radius:14px;padding:10px 14px}
+.stat b{color:var(--yellow)}
+.mall{margin:28px 0 40px}
+.mall-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mall-title h2{margin:0;color:var(--yellow);font-size:26px}
+.count{color:#aaa}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:16px;margin-top:14px}
+.card{position:relative;background:linear-gradient(145deg,#10104a,#080819);border:2px solid #3030a0;
+border-radius:16px;padding:17px;box-shadow:0 0 12px rgba(24,55,216,.25)}
+.card:hover{transform:translateY(-2px);border-color:var(--yellow);box-shadow:0 0 20px rgba(255,230,0,.18)}
+.name{font-size:20px;font-weight:900;margin-right:50px}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
+.badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid #555}
+.floor{color:var(--cyan)} .halal{color:#07100a;background:var(--green);border-color:var(--green);font-weight:900}
+.unknown{color:#ddd;background:#202034}.cuisine{color:#ffd6e6;border-color:#a52d61}
+.actions{display:flex;gap:8px;margin-top:13px}
+.actions a,.actions button{flex:1;text-align:center;text-decoration:none;padding:9px 8px;border-radius:9px;
+border:1px solid #777;background:#171735;color:white;cursor:pointer}
+.actions a.menu{border-color:var(--cyan);color:var(--cyan)}
+.actions a.call{border-color:var(--green);color:var(--green)}
+.actions a.reserve{border-color:var(--pink);color:#ff9fbe}
+.pac{color:var(--yellow);font-size:30px;vertical-align:middle}
+.notice{background:#17172f;border-left:5px solid var(--orange);padding:14px;border-radius:8px;color:#ddd;line-height:1.5}
+footer{padding:30px 24px;color:#888;text-align:center;border-top:2px dotted #333}
+.hidden{display:none!important}
+@media(max-width:650px){header{position:relative}.wrap{padding:15px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="pac">●</span> PAC-MAN FOOD HUNT</div>
+  <div class="subtitle">Causeway Point • Woods Square • Woodlands Civic Centre</div>
+  <div class="searchbar">
+    <input id="search" type="search" placeholder="Search outlet, cuisine, mall or stall number…">
+    <select id="mall" class="filter"><option value="all">All malls</option><option>Causeway Point</option><option>Woods Square</option><option>Woodlands Civic Centre</option></select>
+    <select id="cuisine" class="filter"><option value="all">All cuisines</option></select>
+    <button id="halal" class="toggle">☪ Halal only</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="stats">
+    <div class="stat">🍒 Outlets <b id="total">0</b></div>
+    <div class="stat">☪ Halal-confirmed <b id="halalCount">0</b></div>
+    <div class="stat">👻 Showing <b id="showing">0</b></div>
+  </div>
+  <div class="notice">
+    <b>Prototype data note:</b> this directory is seeded from currently discoverable mall/food directories and halal listings.
+    “Halal” means the source identified the outlet as halal-certified; “Check” means the status was not confirmed in the source.
+    Menu buttons open the outlet's website when a known official site is available. Reservation is shown only where this prototype has a verified reservation/call route.
+  </div>
+  <div id="content"></div>
+</main>
+
+<footer>Waka-waka! 🎮 Food data should be rechecked with each mall/outlet before making a reservation.</footer>
+
+<script>
+const data = [
+/* CAUSEWAY POINT */
+["Causeway Point","4FINGERS Crispy Chicken","#01-38/39","Halal","Fast Food","https://www.4fingers.com/"],
+["Causeway Point","A-One Signature","#03-31","Check","Chinese","https://www.aone.com.sg/"],
+["Causeway Point","Aburi-EN","#02-09B","Check","Japanese","https://aburi-en.com/"],
+["Causeway Point","Ajisen Ramen","#B1-18","Check","Japanese","https://www.ajisen.com.sg/"],
+["Causeway Point","Baker’s Brew","#B1-K01","Check","Bakery / Cafe","https://www.bakersbrew.com/"],
+["Causeway Point","Bali Thai","#05-05","Halal","Thai","https://www.balithai.com.sg/"],
+["Causeway Point","Bee Cheng Hiang","#B1-40","Check","Chinese / Snacks","https://www.beechenghiang.com.sg/"],
+["Causeway Point","Bengawan Solo","#B1-27","Check","Bakery / Local","https://www.bengawansolo.com.sg/"],
+["Causeway Point","Boost Juice Bars","#B1-K31","Check","Juice / Drinks","https://www.boostjuicebars.com.sg/"],
+["Causeway Point","BreadTalk","#01-34","Check","Bakery","https://www.breadtalk.com/"],
+["Causeway Point","Cantine by Kopitiam","#07-03","Check","Local / Food Court","https://www.kopitiam.biz/"],
+["Causeway Point","Chateraise","#01-K04","Check","Bakery / Dessert","https://www.chateraise.co.jp/en/"],
+["Causeway Point","Crave","#B1-K12","Halal","Malay / Nasi Lemak","https://crave.com.sg/"],
+["Causeway Point","Crystal Jade","#05-10","Check","Chinese","https://www.crystaljade.com/"],
+["Causeway Point","Délifrance","#B1-21","Check","French / Bakery","https://www.delifrance.com.sg/"],
+["Causeway Point","Devil Chicken","#01-K10","Halal","Chicken",""],
+["Causeway Point","Dian Xiao Er","#05-11","Check","Chinese","https://www.dianxiaoer.com/"],
+["Causeway Point","Dough Culture","#01-K08","Halal","Local / Snacks","https://www.doughculture.com.sg/"],
+["Causeway Point","Dunkin’ Donuts","#B1-K21","Halal","Donuts / Cafe","https://www.dunkindonuts.com.sg/"],
+["Causeway Point","Each-a-Cup","#B1-K19","Check","Drinks","https://www.eachacup.com/"],
+["Causeway Point","Emicakes","#B1-K32","Check","Bakery / Dessert","https://www.emicakes.com.sg/"],
+["Causeway Point","Eng’s Heritage","#02-05A","Check","Local / Noodles","https://www.engsheritage.com/"],
+["Causeway Point","Famous Amos","#B1-K20","Halal","Cookies / Snacks","https://www.famousamos.com.sg/"],
+["Causeway Point","Fish & Co.","#02-34 & 02-K01","Halal","Seafood","https://www.fish-co.com/"],
+["Causeway Point","Food Republic","#04-01 to 04","Check","Food Court","https://www.foodrepublic.com.sg/"],
+["Causeway Point","Four Leaves","#B1-34","Check","Bakery","https://www.fourleaves.com/"],
+["Causeway Point","Geláre","#03-K06 to K08","Halal","Dessert / Cafe","https://www.gelare.com.sg/","tel:68912665"],
+["Causeway Point","Gong Cha","#02-K10","Check","Drinks","https://www.gong-cha.com/"],
+["Causeway Point","Ho Kee Pau","#01-K07","Check","Dim Sum / Chinese",""],
+["Causeway Point","Hokkaido Baked Cheese Tart","#B1-K25","Halal","Bakery / Dessert","https://www.bakecheesetart.com/"],
+["Causeway Point","Hong Kong Sheng Kee Dessert","#B1-24","Check","Hong Kong / Dessert","https://www.shengkee.com/"],
+["Causeway Point","Hot Tomato","#02-11","Check","Western / Italian","https://www.hottomato.com.sg/"],
+["Causeway Point","Hugabo","#B1-K11","Halal","Snacks / Drinks",""],
+["Causeway Point","Ichiban Boshi","#02-09C","Check","Japanese","https://www.ichibanboshi.com.sg/"],
+["Causeway Point","KFC","#01-40","Halal","Fast Food","https://www.kfc.com.sg/"],
+["Causeway Point","Kuriya Japanese Market","#B1-17","Check","Japanese","https://www.kuriya.com.sg/"],
+["Causeway Point","Lao Huo Tang","#03-02","Check","Chinese Soup","https://www.laohuotang.com.sg/"],
+["Causeway Point","LiHO TEA","#B1-K30","Halal","Drinks","https://liho-tea.com/"],
+["Causeway Point","McDonald’s","#01-35 to 37","Halal","Fast Food","https://www.mcdonalds.com.sg/"],
+["Causeway Point","Monster Planet","#05-13","Check","Japanese / Curry","https://www.monsterplanet.com.sg/"],
+["Causeway Point","MOS Burger","#01-13","Check","Japanese / Fast Food","https://www.mosburger.com.sg/"],
+["Causeway Point","Mr Bean","#01-K06","Halal","Soy / Drinks","https://mrbean.com.sg/"],
+["Causeway Point","Mr. Coconut","#B1-K02","Check","Drinks","https://www.mrcoconut.com/"],
+["Causeway Point","Nine Fresh","#B1-K06","Check","Dessert","https://www.ninefresh.com/"],
+["Causeway Point","Old Chang Kee","#01-K11","Halal","Local / Snacks","https://www.oldchangkee.com/"],
+["Causeway Point","Pastamania","#B1-20","Halal","Italian","https://www.pastamania.com.sg/"],
+["Causeway Point","Pezzo","#B1-K16","Halal","Pizza","https://www.pezzo.com.sg/"],
+["Causeway Point","Poke Theory","#B1-K?","Halal","Poke / Hawaiian","https://poketheory.com/"],
+["Causeway Point","Polar Puffs & Cakes","#B1-K07","Halal","Bakery","https://www.polarpuffs-cakes.com/"],
+["Causeway Point","Poulet","#B1-25","Halal","French","https://www.poulet.com.sg/"],
+["Causeway Point","Power Nasi Lemak","#B1-K15","Halal","Malay",""],
+["Causeway Point","PrimaDéli","#B1-K23","Halal","Bakery / Cafe","https://www.primadeli.com/"],
+["Causeway Point","PUTIEN","#05-09","Check","Chinese","https://www.putien.com/"],
+["Causeway Point","Red Ginger","#02-05","Check","Thai / Asian",""],
+["Causeway Point","Roti Mum","#B1-K27","Halal","Malay / Snacks",""],
+["Causeway Point","rrooll","#B1-K22","Check","Japanese / Snacks",""],
+["Causeway Point","SF Fruits & Juices","#B1-K18","Check","Juice / Drinks",""],
+["Causeway Point","Shabu Sai","#05-14/15","Check","Japanese / Hotpot","https://www.shabusai.com.sg/"],
+["Causeway Point","Snackz It!","#B1-K09","Check","Snacks",""],
+["Causeway Point","So Pho","#B1-16","Check","Vietnamese","https://www.sopho.com.sg/"],
+["Causeway Point","Stuff’d","#B1-K17","Halal","Mexican / Kebab","https://www.stuffd.com.sg/"],
+["Causeway Point","Sunlife Durian Puffs & Pastries","#B1-K10","Check","Bakery / Dessert",""],
+["Causeway Point","Sushiro","#05-16 to 18","Check","Japanese","https://www.akindo-sushiro.co.jp/en/"],
+["Causeway Point","Swee Heng 1989 Signature","#B1-02","Halal","Bakery","https://www.sweeheng.com/"],
+["Causeway Point","Swensen’s","#02-08 to 09A","Halal","Western / Dessert","https://www.swensens.com.sg/"],
+["Causeway Point","Tenderfresh Xpress","#B1-K14","Halal","Chicken / Western","https://www.tenderfresh.com.sg/"],
+["Causeway Point","Teppan-Yaki","#02-09D/10","Halal","Japanese",""],
+["Causeway Point","Texas Chicken","#01-14/15","Halal","Fast Food","https://www.texaschicken.com.sg/"],
+["Causeway Point","The Coffee Bean & Tea Leaf","#02-33 & 02-K02","Check","Cafe","https://www.coffeebean.com.sg/"],
+["Causeway Point","Toast Box","#01-34","Check","Local / Cafe","https://toastbox.com.sg/"],
+["Causeway Point","Tokyo Shokudo","#02-09C","Check","Japanese",""],
+["Causeway Point","Tonkatsu ENbiton","#B1-19","Check","Japanese",""],
+["Causeway Point","Tuk Tuk Cha","#B1-22","Check","Thai / Drinks","https://www.tuktukcha.com/"],
+["Causeway Point","Twelve Cupcakes","#B1-01","Check","Bakery / Dessert","https://www.twelvecupcakes.com/"],
+["Causeway Point","Wok Hey","#B1-K13","Check","Asian / Stir-fry","https://www.wokhey.com/"],
+["Causeway Point","Ya Kun Family Cafe","#B1-23","Halal","Local / Cafe","https://yakun.com/"],
+["Causeway Point","Yolé","#B1-K28","Check","Frozen Yogurt","https://www.yole.com/"],
+["Causeway Point","Yoshinoya","#01-12","Check","Japanese","https://www.yoshinoya.com.sg/"],
+/* WOODS SQUARE */
+["Woods Square","Andes By Astons","#01-13/16","Halal","Western","https://www.astons.com.sg/"],
+["Woods Square","Ayam Penyet Ria","#B2-03","Halal","Indonesian","https://ayampenyetria.com/"],
+["Woods Square","Cat & The Fiddle Cafe","#01-15","Halal","Cake / Cafe","https://www.catthe-fiddle.com/"],
+["Woods Square","Chic-a-boo Chicken Speciality","#B2-??","Halal","Chicken",""],
+["Woods Square","East Treasure Chinese Restaurant","#B2-??","Check","Chinese",""],
+["Woods Square","Feng Food","#B2-??","Check","Chinese / Local",""],
+["Woods Square","Fun Toast","#B2-11/12","Check","Local / Cafe","https://funtoast.com.sg/"],
+["Woods Square","Ji De Chi","#B2-??","Check","Dessert / Chinese",""],
+["Woods Square","Kei Kaisendon","#B2-??","Check","Japanese",""],
+["Woods Square","Long John Silver's","#B2-19","Halal","Fast Food / Seafood","https://www.longjohnsilvers.com.sg/"],
+["Woods Square","Luckin Coffee","#01-05","Check","Cafe","https://www.luckincoffee.com/"],
+["Woods Square","Milksha","#B2-??","Check","Drinks","https://www.milksha.com/"],
+["Woods Square","Nomvnom Xpress","#B2-??","Halal","Vegetarian","https://www.nomvnom.com/"],
+["Woods Square","Nuodle","#B2-??","Check","Chinese / Noodles",""],
+["Woods Square","O/t Bar","#B1-??","Check","Bar / Western",""],
+["Woods Square","Onkei Tonkatsu","#B2-??","Check","Japanese",""],
+["Woods Square","Pho Street","#B2-??","Check","Vietnamese","https://www.phostreet.com.sg/"],
+["Woods Square","Rocky Master","#B2-??","Check","Western / Cafe","https://rockymaster.com.sg/"],
+["Woods Square","Rollie Olie","#B2-??","Check","Wraps / Asian",""],
+["Woods Square","Saizeriya","#B2-??","Check","Italian / Japanese","https://www.saizeriya.com.sg/"],
+["Woods Square","Sanook Kitchen","#B2-08","Check","Thai","https://www.sanook-kitchen.com/"],
+["Woods Square","Sukiya","#B2-??","Check","Japanese","https://www.sukiya.com.sg/"],
+["Woods Square","Swee Heng 1989 Classic","#B2-??","Halal","Bakery","https://www.sweeheng.com/"],
+["Woods Square","Tai Cheong Bakery","#B2-??","Check","Bakery / Hong Kong","https://www.taicheongbakery.com/"],
+["Woods Square","Takagi Ramen","#B2-??","Check","Japanese","https://www.takagiramen.com/"],
+["Woods Square","The Soup Spoon","#B2-??","Check","Soup / Western","https://www.thesoupspoon.com/"],
+["Woods Square","The White Tiffin","#B2-??","Halal","Peranakan / Local",""],
+["Woods Square","Tipsy Panda","#B2-??","Check","Bar / Fusion",""],
+["Woods Square","Tori-Q","#B2-??","Check","Japanese","https://www.tori-q.com.sg/"],
+/* CIVIC CENTRE */
+["Woodlands Civic Centre","McDonald’s","#01-01","Halal","Fast Food","https://www.mcdonalds.com.sg/"],
+["Woodlands Civic Centre","Kaffe & Toast","#01-09","Halal","Local / Cafe",""],
+["Woodlands Civic Centre","Starbucks","#02-09","Check","Cafe","https://www.starbucks.com.sg/"],
+["Woodlands Civic Centre","Hei Sushi","#??","Halal","Japanese","https://www.heisushi.com.sg/"]
+];
+
+const cuisineSet=[...new Set(data.map(x=>x[4]))].sort();
+const cuisineEl=document.getElementById('cuisine');
+cuisineSet.forEach(c=>cuisineEl.insertAdjacentHTML('beforeend',`<option>${c}</option>`));
+
+const halalNames=new Set(data.filter(x=>x[3]==="Halal").map(x=>x[1]));
+const content=document.getElementById('content');
+const search=document.getElementById('search'), mall=document.getElementById('mall'), cuisine=cuisineEl, halal=document.getElementById('halal');
+
+function card(x){
+ const [m,n,s,h,c,u,phone]=x;
+ const halalBadge=h==="Halal"?`<span class="badge halal">☪ HALAL</span>`:`<span class="badge unknown">HALAL: CHECK</span>`;
+ const menu=u?`<a class="menu" href="${u}" target="_blank" rel="noopener">🍴 Menu / Website</a>`:`<a class="menu" href="https://www.google.com/search?q=${encodeURIComponent(n+" "+m+" Singapore menu")}" target="_blank">🔎 Find menu</a>`;
+ const call=phone?`<a class="call" href="${phone}">☎ Call</a>`:`<a class="call" href="https://www.google.com/search?q=${encodeURIComponent(n+" "+m+" Singapore phone")}" target="_blank">☎ Find phone</a>`;
+ return `<article class="card">
+   <div class="name">${n}</div>
+   <div class="meta"><span class="badge floor">${s}</span>${halalBadge}<span class="badge cuisine">${c}</span></div>
+   <div style="color:#aaa;font-size:13px">${m}</div>
+   <div class="actions">${menu}${call}</div>
+ </article>`;
+}
+function render(){
+ const q=search.value.toLowerCase().trim(), mm=mall.value, cc=cuisine.value, ho=halal.classList.contains('active');
+ const filtered=data.filter(x=>{
+   const text=x.join(" ").toLowerCase();
+   return (!q||text.includes(q))&&(mm==="all"||x[0]===mm)&&(cc==="all"||x[4]===cc)&&(!ho||x[3]==="Halal");
+ });
+ const groups=["Causeway Point","Woods Square","Woodlands Civic Centre"];
+ content.innerHTML=groups.map(g=>{
+   const arr=filtered.filter(x=>x[0]===g);
+   if(!arr.length)return "";
+   return `<section class="mall"><div class="mall-title"><h2>◉ ${g}</h2><span class="count">${arr.length} found</span></div><div class="grid">${arr.map(card).join("")}</div></section>`;
+ }).join("");
+ document.getElementById('showing').textContent=filtered.length;
+}
+document.getElementById('total').textContent=data.length;
+document.getElementById('halalCount').textContent=halalNames.size;
+[search,mall,cuisine].forEach(el=>el.addEventListener('input',render));
+halal.addEventListener('click',()=>{halal.classList.toggle('active');render()});
+render();
+</script>
+</body>
+</html>
