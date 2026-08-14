@@ -40,8 +40,7 @@ border-radius:16px;padding:17px;box-shadow:0 0 12px rgba(24,55,216,.25)}
 .meta{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid #555}
 .floor{color:var(--cyan)} .halal{color:#07100a;background:var(--green);border-color:var(--green);font-weight:900}
-.unknown{color:#ddd;background:#202034}.cuisine{color:#ffd6e6;border-color:#a52d61}
-.actions{display:flex;gap:8px;margin-top:13px}
+.unknown{color:#ddd;background:#202034}.cuisine{color:#ffd6e6;border-color:#a52d61}.reviews{border-color:#ffd54a!important;color:#ffd54a!important}.grab{border-color:#00e676!important;color:#00e676!important}.actions{display:flex;gap:8px;margin-top:13px}
 .actions a,.actions button{flex:1;text-align:center;text-decoration:none;padding:9px 8px;border-radius:9px;
 border:1px solid #777;background:#171735;color:white;cursor:pointer}
 .actions a.menu{border-color:var(--cyan);color:var(--cyan)}
@@ -52,19 +51,42 @@ border:1px solid #777;background:#171735;color:white;cursor:pointer}
 footer{padding:30px 24px;color:#888;text-align:center;border-top:2px dotted #333}
 .hidden{display:none!important}
 @media(max-width:650px){header{position:relative}.wrap{padding:15px}.grid{grid-template-columns:1fr}}
+
+.rouletteBtn{padding:12px 18px;border:3px solid var(--pink);border-radius:12px;background:#4a082a;color:#fff;font-weight:900;cursor:pointer}
+.rouletteOverlay{position:fixed;inset:0;background:rgba(2,2,10,.86);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.rouletteBox{width:min(560px,96vw);background:linear-gradient(145deg,#10104a,#080819);border:3px solid var(--yellow);border-radius:22px;padding:24px;text-align:center}
+.wheelWrap{width:280px;height:280px;margin:15px auto;position:relative}.wheel{width:100%;height:100%;border-radius:50%;border:8px solid var(--yellow);background:conic-gradient(#ff3b81,#1837d8,#48e66b,#ff8a00,#00e5ff,#7a42ff,#ff3b81,#1837d8);transition:transform 3.8s cubic-bezier(.12,.76,.12,1);display:flex;align-items:center;justify-content:center}.pointer{position:absolute;top:-2px;left:50%;transform:translateX(-50%);z-index:2;color:var(--yellow);font-size:34px}.result{min-height:78px;margin:12px 0;font-size:20px}.result b{display:block;color:var(--yellow);font-size:30px;margin-top:5px}
+''
+.roulette-label {
+    margin-top: 8px;
+    color: #b9c2ff;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.hours {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid #3a3a80;
+    border-radius: 9px;
+    background: #0d0d2a;
+    color: #e8e8ff;
+    font-size: 13px;
+}
+.hours strong { color: var(--yellow); }
+.actions a.hours-link {
+    border-color: var(--yellow);
+    color: var(--yellow);
+}
 </style>
 </head>
 <body>
 <header>
   <div class="logo"><span class="pac">●</span> PAC-MAN FOOD HUNT</div>
   <div class="subtitle">Causeway Point • Woods Square • Woodlands Civic Centre</div>
-  <div class="searchbar">
-    <input id="search" type="search" placeholder="Search outlet, cuisine, mall or stall number…">
-    <select id="mall" class="filter"><option value="all">All malls</option><option>Causeway Point</option><option>Woods Square</option><option>Woodlands Civic Centre</option></select>
-    <select id="cuisine" class="filter"><option value="all">All cuisines</option></select>
-    <button id="halal" class="toggle">☪ Halal only</button>
-  </div>
-</header>
+  <div class="searchbar"><input id="search" type="search" placeholder="Search outlet, cuisine, mall or stall number…"><select id="mall" class="filter"><option value="all">All malls</option><option>Causeway Point</option><option>Woods Square</option><option>Woodlands Civic Centre</option></select><select id="cuisine" class="filter"><option value="all">All cuisines</option></select><button id="halal" class="toggle">☪ Halal only</button><button id="rouletteBtn" class="rouletteBtn">🎰 SPIN THE FOOD WHEEL</button></div></header>
 
 <main class="wrap">
   <div class="stats">
@@ -75,12 +97,12 @@ footer{padding:30px 24px;color:#888;text-align:center;border-top:2px dotted #333
   <div class="notice">
     <b>Prototype data note:</b> this directory is seeded from currently discoverable mall/food directories and halal listings.
     “Halal” means the source identified the outlet as halal-certified; “Check” means the status was not confirmed in the source.
-    Menu buttons open the outlet's website when a known official site is available. Reservation is shown only where this prototype has a verified reservation/call route.
+    Cuisine is grouped into the 12 broad categories requested. Google Reviews opens the outlet search in Google Maps, and GrabFood opens the Singapore GrabFood restaurant search for that outlet; final availability depends on Grab's current delivery coverage and the user's address.
   </div>
   <div id="content"></div>
 </main>
 
-<footer>Waka-waka! 🎮 Food data should be rechecked with each mall/outlet before making a reservation.</footer>
+<div id="rouletteOverlay" class="rouletteOverlay"><div class="rouletteBox"><div style="font-size:28px;font-weight:900;color:var(--yellow)">🎰 FOOD ROULETTE</div><div style="color:#b9c2ff">Let PAC-MAN decide what you should eat.</div><div class="wheelWrap"><div class="pointer">▼</div><div id="wheel" class="wheel"></div></div><div id="rouletteResult" class="result">Ready?</div><button id="spinAgain" class="rouletteBtn">SPIN AGAIN</button><button id="closeRoulette" class="closeBtn">CLOSE</button></div></div><footer>Waka-waka! 🎮 Food data should be rechecked with each mall/outlet before making a reservation.</footer>
 
 <script>
 const data = [
@@ -200,26 +222,149 @@ const data = [
 ["Woodlands Civic Centre","Hei Sushi","#??","Halal","Japanese","https://www.heisushi.com.sg/"]
 ];
 
-const cuisineSet=[...new Set(data.map(x=>x[4]))].sort();
+
+function normalizeCuisine(label){
+    const s = (label || "").toLowerCase().trim();
+
+    if (/(japanese|ramen|sushi|kaisendon|tonkatsu|teppan|curry)/.test(s))
+        return "Japanese";
+
+    if (/(chinese|dim sum|hong kong|stir-fry|wok|pao|pau)/.test(s))
+        return "Chinese";
+
+    if (/(thai)/.test(s))
+        return "Thai";
+
+    if (/(korean)/.test(s))
+        return "Korean";
+
+    if (/(vietnamese|pho)/.test(s))
+        return "Vietnamese";
+
+    if (/(indonesian|ayam penyet)/.test(s))
+        return "Indonesian";
+
+    if (/(malay|nasi lemak|local|kopitiam|toast|coffee|soya|soy|roti)/.test(s))
+        return "Local";
+
+    if (/(western|italian|french|pizza|seafood|steak)/.test(s))
+        return "Western";
+
+    if (/(mexican|kebab|hawaiian|poke)/.test(s))
+        return "Other International";
+
+    if (/(bakery|cake|dessert|donut|cookie|pastr|tart|frozen yogurt)/.test(s))
+        return "Bakery";
+
+    if (/(bar)/.test(s))
+        return "Bar";
+
+    if (/(fast food|chicken|burger|fried chicken)/.test(s))
+        return "Fast Food";
+
+    if (/(food court)/.test(s))
+        return "Food Court";
+
+    if (/(juice|drink|bubble tea|tea|cafe|coffee)/.test(s))
+        return "Cafe / Drinks";
+
+    return "Other";
+}
+
+data.forEach(x => {
+    x[4] = normalizeCuisine(x[4]);
+});
+
 const cuisineEl=document.getElementById('cuisine');
-cuisineSet.forEach(c=>cuisineEl.insertAdjacentHTML('beforeend',`<option>${c}</option>`));
+const cuisineOptions = [...new Set(data.map(x => x[4]).filter(Boolean))].sort();
+cuisineOptions.forEach(c => cuisineEl.insertAdjacentHTML(
+    'beforeend',
+    `<option value="${c}">${c}</option>`
+));
 
 const halalNames=new Set(data.filter(x=>x[3]==="Halal").map(x=>x[1]));
 const content=document.getElementById('content');
 const search=document.getElementById('search'), mall=document.getElementById('mall'), cuisine=cuisineEl, halal=document.getElementById('halal');
 
-function card(x){
- const [m,n,s,h,c,u,phone]=x;
- const halalBadge=h==="Halal"?`<span class="badge halal">☪ HALAL</span>`:`<span class="badge unknown">HALAL: CHECK</span>`;
- const menu=u?`<a class="menu" href="${u}" target="_blank" rel="noopener">🍴 Menu / Website</a>`:`<a class="menu" href="https://www.google.com/search?q=${encodeURIComponent(n+" "+m+" Singapore menu")}" target="_blank">🔎 Find menu</a>`;
- const call=phone?`<a class="call" href="${phone}">☎ Call</a>`:`<a class="call" href="https://www.google.com/search?q=${encodeURIComponent(n+" "+m+" Singapore phone")}" target="_blank">☎ Find phone</a>`;
- return `<article class="card">
-   <div class="name">${n}</div>
-   <div class="meta"><span class="badge floor">${s}</span>${halalBadge}<span class="badge cuisine">${c}</span></div>
-   <div style="color:#aaa;font-size:13px">${m}</div>
-   <div class="actions">${menu}${call}</div>
- </article>`;
+function mapsUrl(n,m){return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(n+', '+m+', Singapore')}`;}
+function grabUrl(n,m){return `https://food.grab.com/sg/en/restaurants?search=${encodeURIComponent(n+' '+m)}`;}
+
+function operatingHours(mallName, outletName){
+    const key = (mallName + "|" + outletName).toLowerCase();
+
+    const known = {
+        "causeway point|food republic": "Daily 10:00 AM–10:00 PM",
+        "causeway point|ho kee pau": "Daily 7:00 AM–10:00 PM",
+        "woodlands civic centre|mcdonald’s": "Daily 7:00 AM–12:00 AM",
+        "woodlands civic centre|mcdonald's": "Daily 7:00 AM–12:00 AM",
+        "woodlands civic centre|starbucks": "Daily 7:00 AM–10:30 PM",
+        "woodlands civic centre|kaffe & toast": "Daily 7:30 AM–9:00 PM"
+    };
+
+    return known[key] || "";
 }
+
+function card(x){
+    const [m,n,s,h,c,u,phone] = x;
+
+    const halalBadge =
+        h==="Halal"
+        ? `<span class="badge halal">☪ HALAL</span>`
+        : `<span class="badge unknown">HALAL: CHECK</span>`;
+
+    const menu = u
+        ? `<a class="menu" href="${u}" target="_blank" rel="noopener">🍴 Menu / Website</a>`
+        : `<a class="menu" href="${mapsUrl(n,m)}" target="_blank" rel="noopener">🔎 Find menu</a>`;
+
+    const reviews =
+        `<a class="reviews" href="${mapsUrl(n,m)}" target="_blank" rel="noopener">⭐ Google Reviews</a>`;
+
+    const grab =
+        `<a class="grab" href="${grabUrl(n,m)}" target="_blank" rel="noopener">🛵 GrabFood</a>`;
+
+    const phoneLink = phone
+        ? `<a class="call" href="${phone}">☎ Call</a>`
+        : `<a class="call" href="${mapsUrl(n,m)}" target="_blank" rel="noopener">☎ Phone</a>`;
+
+    const hoursLink =
+        `<a class="hours-link"
+            href="https://www.google.com/search?q=${encodeURIComponent(n+" "+m+" Singapore opening hours")}"
+            target="_blank"
+            rel="noopener">
+            🕒 Hours
+        </a>`;
+
+    return `<article class="card">
+        <div class="name">${n}</div>
+
+        <div class="meta">
+            <span class="badge floor">${s}</span>
+            ${halalBadge}
+            <span class="badge cuisine">${c}</span>
+        </div>
+
+        <div style="color:#aaa;font-size:13px">${m}</div>
+
+        ${operatingHours(m,n)
+            ? `<div class="hours">
+                🕒 <strong>Operating Hours:</strong>
+                ${operatingHours(m,n)}
+            </div>`
+            : ""}
+
+        <div class="actions">
+            ${menu}
+            ${reviews}
+        </div>
+
+        <div class="actions">
+            ${grab}
+            ${hoursLink}
+            ${phoneLink}
+        </div>
+    </article>`;
+}
+
 function render(){
  const q=search.value.toLowerCase().trim(), mm=mall.value, cc=cuisine.value, ho=halal.classList.contains('active');
  const filtered=data.filter(x=>{
@@ -239,6 +384,27 @@ document.getElementById('halalCount').textContent=halalNames.size;
 [search,mall,cuisine].forEach(el=>el.addEventListener('input',render));
 halal.addEventListener('click',()=>{halal.classList.toggle('active');render()});
 render();
-</script>
+
+const overlay=document.getElementById("rouletteOverlay"),wheel=document.getElementById("wheel"),rouletteResult=document.getElementById("rouletteResult");
+let rotation=0;
+function candidates(){
+ const q=search.value.toLowerCase().trim(),mm=mall.value,cc=cuisine.value,ho=halal.classList.contains('active');
+ return data.filter(x=>(!q||x.join(" ").toLowerCase().includes(q))&&(mm==="all"||x[0]===mm)&&(cc==="all"||x[4]===cc)&&(!ho||x[3]==="Halal"));
+}
+function spinWheel(){
+ const a=candidates();
+ if(!a.length){rouletteResult.innerHTML='No matching outlets.<b>Try fewer filters!</b>';return;}
+ rouletteResult.textContent="PAC-MAN is thinking…";
+ const p=a[Math.floor(Math.random()*a.length)];
+ rotation+=1800+Math.floor(Math.random()*360);
+ wheel.style.transform=`rotate(${rotation}deg)`;
+ setTimeout(()=>{
+   rouletteResult.innerHTML=`PAC-MAN CHOSE <b>${p[1]}</b><span style="display:block;color:#aaa;font-size:14px;margin-top:4px">${p[0]} • ${p[2]} • ${p[4]}</span>`;
+ },3800);
+}
+document.getElementById("rouletteBtn").onclick=()=>{overlay.style.display="flex";rouletteResult.textContent="Ready?";};
+document.getElementById("spinAgain").onclick=spinWheel;
+document.getElementById("closeRoulette").onclick=()=>overlay.style.display="none";
+overlay.onclick=e=>{if(e.target===overlay)overlay.style.display="none"};</script>
 </body>
 </html>
